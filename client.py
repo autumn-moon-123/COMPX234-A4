@@ -1,5 +1,9 @@
 
 import socket
+import sys
+import os
+import base64
+import random
 
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 client.bind(('127.0.0.1', 12346))  
