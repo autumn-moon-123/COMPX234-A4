@@ -20,7 +20,26 @@ class UDPServer:
          request = data.decode().strip()
          if not request.startswith("DOWNLOAD "):
           return
-    
-filename = server.recvfrom(1024)[0].decode()
-with open(filename, 'rb') as f:
-        server.sendto(f.read(), ('127.0.0.1', 12346)) 
+         filename = request[9:]
+         filepath = os.path.join(self.file_dir, filename)
+
+         if not os.path.exists(filepath):
+            self.server_socket.sendto(f"ERR {filename} NOT_FOUND".encode(), client_addr)
+            return
+
+         data_port = random.randint(50000, 51000)
+         data_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+         data_socket.bind((self.host, data_port))
+
+         file_size = os.path.getsize(filepath)
+         self.server_socket.sendto(f"OK {filename} SIZE {file_size} PORT {data_port}".encode(), client_addr)
+
+         threading.Thread(
+            target=self.handle_file_transfer,
+            args=(filename, filepath, data_socket),
+            daemon=True
+        ).start()
+    def handle_file_transfer(self, filename, filepath, data_socket):
+        filename = server.recvfrom(1024)[0].decode()
+        with open(filename, 'rb') as f:
+                server.sendto(f.read(), ('127.0.0.1', 12346)) 
