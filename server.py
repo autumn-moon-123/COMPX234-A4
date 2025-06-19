@@ -44,8 +44,17 @@ class UDPServer:
             while True:
                 data, client_addr = data_socket.recvfrom(1024)
                 request = data.decode()
-        filename = server.recvfrom(1024)[0].decode()
-        with open(filename, 'rb') as f:
+                if request.startswith(f"FILE {filename} GET"):
+                    parts = request.split()
+                    start = int(parts[4])
+                    end = int(parts[6])
+
+                    with open(filepath, 'rb') as f:
+                        f.seek(start)
+                        data_block = f.read(end - start + 1)
+                        encoded = base64.b64encode(data_block).decode()
+                        response = f"FILE {filename} OK START {start} END {end} DATA {encoded}"
+                        data_socket.sendto(response.encode(), client_addr)
                 server.sendto(f.read(), ('127.0.0.1', 12346)) 
                 if request.startswith(f"FILE {filename} GET"):
                     parts = request.split()
