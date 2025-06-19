@@ -47,5 +47,9 @@ class UDPServer:
         filename = server.recvfrom(1024)[0].decode()
         with open(filename, 'rb') as f:
                 server.sendto(f.read(), ('127.0.0.1', 12346)) 
+                if request.startswith(f"FILE {filename} GET"):
+                    parts = request.split()
+                    start = int(parts[4])
+                    end = int(parts[6])
         finally:
         data_socket.close()
