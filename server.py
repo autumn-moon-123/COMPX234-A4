@@ -40,6 +40,12 @@ class UDPServer:
             daemon=True
         ).start()
     def handle_file_transfer(self, filename, filepath, data_socket):
+        try:
+            while True:
+                data, client_addr = data_socket.recvfrom(1024)
+                request = data.decode()
         filename = server.recvfrom(1024)[0].decode()
         with open(filename, 'rb') as f:
                 server.sendto(f.read(), ('127.0.0.1', 12346)) 
+        finally:
+        data_socket.close()
