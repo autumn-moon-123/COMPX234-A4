@@ -60,3 +60,11 @@ class UDPServer:
                     break
         finally:
          data_socket.close()
+    def start(self):
+        while True:
+            data, client_addr = self.server_socket.recvfrom(1024)
+            threading.Thread(
+                target=self.handle_download_request,
+                args=(data, client_addr),
+                daemon=True
+            ).start()
