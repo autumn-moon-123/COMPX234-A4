@@ -55,10 +55,8 @@ class UDPServer:
                         encoded = base64.b64encode(data_block).decode()
                         response = f"FILE {filename} OK START {start} END {end} DATA {encoded}"
                         data_socket.sendto(response.encode(), client_addr)
-                server.sendto(f.read(), ('127.0.0.1', 12346)) 
-                if request.startswith(f"FILE {filename} GET"):
-                    parts = request.split()
-                    start = int(parts[4])
-                    end = int(parts[6])
+                elif request == f"FILE {filename} CLOSE":
+                    data_socket.sendto(f"FILE {filename} CLOSE_OK".encode(), client_addr)
+                    break
         finally:
-        data_socket.close()
+         data_socket.close()
