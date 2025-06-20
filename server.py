@@ -68,3 +68,16 @@ class UDPServer:
                 args=(data, client_addr),
                 daemon=True
             ).start()
+if __name__ == "__main__":
+    if len(sys.argv) != 2:  
+        print("Usage: python server.py <port>")
+        sys.exit(1)
+
+    try:
+        port = int(sys.argv[1])
+        server = UDPServer('0.0.0.0', port)
+        print(f"Server started on port {port}")
+        server.start()
+    except ValueError:
+        print("Error: Port must be a valid integer")
+        sys.exit(1)
