@@ -21,11 +21,38 @@ class UDPClient:
         if response.startswith("ERR"):
             print(f"ERR {filename} NOT_FOUND")
             return False
-        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        client.bind(('127.0.0.1', 12346))  
+        
+        parts = response.split()
+        filename = parts[1]
+        file_size = int(parts[3])
+        data_port = int(parts[5])
 
-        filename = input("filename: ")
-        client.sendto(filename.encode(), ('127.0.0.1', 12345))
+        data_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+        client_port = random.randint(51000, 52000)
+        data_socket.bind(('0.0.0.0', client_port))
 
-        with open('downloaded_' + filename, 'wb') as f:
-            f.write(client.recvfrom(65535)[0])
+        file_path = os.path.join(self.download_dir, f"downloaded_{filename}")
+        bytes_received = 0
+        block_size = 512  
+
+        with open(file_path, 'wb') as f:
+            while bytes_received < file_size:
+                start = bytes_received
+                end = min(bytes_received + block_size - 1, file_size - 1)
+                data_socket.sendto(f"FILE {filename} GET START {start} END {end}".encode(),
+                                   (self.server_host, data_port))
+
+                response, _ = data_socket.recvfrom(65536)
+                response = response.decode()
+
+                if response.startswith(f"FILE {filename} OK"):
+                    data = base64.b64decode(response.split("DATA ")[1].encode())
+                    f.write(data)
+                    bytes_received += len(data)
+                    print(f"Received {bytes_received}/{file_size} bytes")
+
+            data_socket.sendto(f"FILE {filename} CLOSE".encode(), (self.server_host, data_port))
+            data_socket.recvfrom(1024)  
+
+        return bytes_received == file_size
