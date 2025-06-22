@@ -56,3 +56,10 @@ class UDPClient:
             data_socket.recvfrom(1024)  
 
         return bytes_received == file_size
+
+    def download_files(self):
+        success = 0
+        for filename in self.filelist:
+            if self.download_file(filename.strip()):
+                success += 1
+        print(f"Download completed: {success}/{len(self.filelist)} files")
