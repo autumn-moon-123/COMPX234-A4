@@ -63,3 +63,19 @@ class UDPClient:
             if self.download_file(filename.strip()):
                 success += 1
         print(f"Download completed: {success}/{len(self.filelist)} files")
+if __name__ == "__main__":
+    if len(sys.argv) != 4: 
+        print("Usage: python client.py <host> <port> <filelist>")
+        sys.exit(1)
+
+    try:
+        with open(sys.argv[3]) as f:
+            filelist = [line.strip() for line in f if line.strip()]
+        client = UDPClient(sys.argv[1], int(sys.argv[2]), filelist)
+        client.download_files()
+    except FileNotFoundError:
+        print(f"Error: File {sys.argv[3]} not found")
+        sys.exit(1)
+    except ValueError:
+        print("Error: Port must be a valid integer")
+        sys.exit(1)
