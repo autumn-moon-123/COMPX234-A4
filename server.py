@@ -13,9 +13,6 @@ class UDPServer:
         self.server_socket.bind((host, port))
         self.file_dir = os.getcwd()
 
-        server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server.bind(('127.0.0.1', 12345))
-
     def handle_download_request(self, data, client_addr):
          request = data.decode().strip()
          if not request.startswith("DOWNLOAD "):
