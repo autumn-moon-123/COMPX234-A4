@@ -6,13 +6,32 @@ import random
 
 
 class UDPClient:
+    """A UDP client for downloading files from a server in chunks."""
     def __init__(self, server_host, server_port, filelist):
+        """
+        Initialize the UDP client.
+        
+        Args:
+            server_host (str): The server hostname or IP address
+            server_port (int): The server port number
+            filelist (list): List of files to download
+        """
+                
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.server_host = server_host
         self.server_port = server_port
         self.filelist = filelist
         self.download_dir = os.getcwd()
     def download_file(self, filename):
+        """
+        Download a single file from the server.
+        
+        Args:
+            filename (str): Name of the file to download
+            
+        Returns:
+            bool: True if download succeeded, False otherwise
+        """
         self.client_socket.sendto(f"DOWNLOAD {filename}".encode(), (self.server_host, self.server_port))
         response, _ = self.client_socket.recvfrom(1024)
         response = response.decode()
@@ -57,6 +76,7 @@ class UDPClient:
         return bytes_received == file_size
 
     def download_files(self):
+        """Download all files in the filelist and report completion status."""
         success = 0
         for filename in self.filelist:
             if self.download_file(filename.strip()):

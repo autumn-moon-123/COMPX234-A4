@@ -6,7 +6,15 @@ import base64
 import sys  
 
 class UDPServer:
+    """A UDP server that handles file download requests from clients."""
     def __init__(self, host, port):
+        """
+        Initialize the UDP server.
+        
+        Args:
+            host (str): Host interface to bind to
+            port (int): Port number to listen on
+        """
         self.host = host
         self.port = port
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -14,6 +22,13 @@ class UDPServer:
         self.file_dir = os.getcwd()
 
     def handle_download_request(self, data, client_addr):
+         """
+        Handle an incoming download request from a client.
+        
+        Args:
+            data (bytes): The received data from client
+            client_addr (tuple): Client address (host, port)
+         """
          request = data.decode().strip()
          if not request.startswith("DOWNLOAD "):
           return
@@ -37,6 +52,14 @@ class UDPServer:
             daemon=True
         ).start()
     def handle_file_transfer(self, filename, filepath, data_socket):
+        """
+        Handle the actual file transfer to the client in chunks.
+        
+        Args:
+            filename (str): Name of the file being transferred
+            filepath (str): Path to the file on server
+            data_socket (socket): Socket for data transfer
+        """
         try:
             while True:
                 data, client_addr = data_socket.recvfrom(1024)
@@ -58,6 +81,7 @@ class UDPServer:
         finally:
          data_socket.close()
     def start(self):
+        """Start the server and begin listening for requests."""
         while True:
             data, client_addr = self.server_socket.recvfrom(1024)
             threading.Thread(
