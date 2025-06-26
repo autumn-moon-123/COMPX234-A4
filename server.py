@@ -17,8 +17,10 @@ class UDPServer:
         """
         self.host = host
         self.port = port
+        # Create and bind main server socket
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.server_socket.bind((host, port))
+        # Serve files from current directory
         self.file_dir = os.getcwd()
 
     def handle_download_request(self, data, client_addr):
@@ -31,21 +33,22 @@ class UDPServer:
          """
          request = data.decode().strip()
          if not request.startswith("DOWNLOAD "):
-          return
+          return # Ignore malformed requests
          filename = request[9:]
          filepath = os.path.join(self.file_dir, filename)
-
+        # Check if file exists
          if not os.path.exists(filepath):
             self.server_socket.sendto(f"ERR {filename} NOT_FOUND".encode(), client_addr)
             return
-
+        # Create random port for data transfer (50000-51000)
          data_port = random.randint(50000, 51000)
          data_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
          data_socket.bind((self.host, data_port))
 
+        # Send file info back to client
          file_size = os.path.getsize(filepath)
          self.server_socket.sendto(f"OK {filename} SIZE {file_size} PORT {data_port}".encode(), client_addr)
-
+        # Start new thread to handle file transfer
          threading.Thread(
             target=self.handle_file_transfer,
             args=(filename, filepath, data_socket),
@@ -62,8 +65,10 @@ class UDPServer:
         """
         try:
             while True:
+                # Wait for client request
                 data, client_addr = data_socket.recvfrom(1024)
                 request = data.decode()
+                # Handle data chunk request
                 if request.startswith(f"FILE {filename} GET"):
                     parts = request.split()
                     start = int(parts[4])
@@ -71,10 +76,13 @@ class UDPServer:
 
                     with open(filepath, 'rb') as f:
                         f.seek(start)
+                        # Read requested byte range
                         data_block = f.read(end - start + 1)
+                        # Encode as base64 for transmission
                         encoded = base64.b64encode(data_block).decode()
                         response = f"FILE {filename} OK START {start} END {end} DATA {encoded}"
                         data_socket.sendto(response.encode(), client_addr)
+                # Handle close request
                 elif request == f"FILE {filename} CLOSE":
                     data_socket.sendto(f"FILE {filename} CLOSE_OK".encode(), client_addr)
                     break
@@ -90,6 +98,7 @@ class UDPServer:
                 daemon=True
             ).start()
 if __name__ == "__main__":
+    # Validate command line arguments
     if len(sys.argv) != 2:  
         print("Usage: python server.py <port>")
         sys.exit(1)
